@@ -5,8 +5,18 @@ import datetime
 
 def get_user_saved_addresses(input_object_raw,context):
 	
-	# Capture the inputs to the function
+	# Capture the inputs to the function WORKS FOR BOTH LOCAL AS WELL AS FULL DEPLOYMENT
 	input_object = input_object_raw
+	
+	# FOR DOCKER TESTING
+	# input_object = json.loads(input_object_raw['body'])
+
+	# FOR DOCKER BUT ALSO WHEN FULLY DEPLOYED
+	# dynamodb = boto3.resource('dynamodb')
+
+	# FOR ONLY LOCAL TESTING
+	dynamodb = boto3.resource('dynamodb', endpoint_url='http://localhost:8001')
+
 	user_id = input_object['user_id']
 	saved_addresses_master = list(input_object['saved_addresses']) # We want this so we can have a copy to refer back to
 	saved_addresses_original = list(input_object['saved_addresses']) # This is what we will start working against
@@ -17,8 +27,6 @@ def get_user_saved_addresses(input_object_raw,context):
 
 	# Connect to Dynamodb and create table for batch get
 
-	# dynamodb = boto3.resource('dynamodb', endpoint_url='http://localhost:8001')
-	dynamodb = boto3.resource('dynamodb')
 	cached_homes = dynamodb.Table('Cached_Home_Analysis_Reports')
 	user_saved_addresses_table = dynamodb.Table('User_Saved_Addresses')
 
@@ -97,15 +105,19 @@ def get_user_saved_addresses(input_object_raw,context):
 	
 	output_object['missing_reports'] = saved_addresses
 
+	# FOR ACTUAL DEPLOYMENT
 	return output_object
+
+	# FOR DOCKER/LOCAL TESTING
+	# return {'statusCode': 200,'body': json.dumps(output_object)}
 
 # ---------------- TESTING ----------------
 
-# test_get_homes = {
-# 	"user_id": "5",
-# 	"saved_addresses": ["90","40","27","81","22","65","76","77","77"]	
-# }
-# context = "test"
+test_get_homes = {
+	"user_id": "5",
+	"saved_addresses": ["90","40","27","81","22","65","76","77","77"]	
+}
+context = "test"
 
-# x = get_user_saved_addresses(test_get_homes,context)
-# print(x)
+x = get_user_saved_addresses(test_get_homes,context)
+print(x)
